@@ -1,25 +1,43 @@
-// server.js
-const express = require("express");
-const dotenv = require("dotenv");
-const cors = require("cors");
-const connectDB = require("./config/db");
-const taskRoutes = require("./routes/taskRoutes");
-const { getTasks, createTask, updateTask, deleteTask } = require("./controllers/taskController"); // Import task controller
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import jwt from "jsonwebtoken";
 
-dotenv.config();
-connectDB(); // Connect to MongoDB
+import connectDB from "./config/db.js";
+import User from "./models/userModel.js";
+import taskRoutes from "./routes/taskRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
+import authRoutes from "./routes/authRoutes.js";
 
+
+import { notFound, errorHandler } from "./middleware/errorHandler.js";
+import { protect, verifyToken, verifyTokenAndAdmin, verifyTokenAndAuthorization } from "./middleware/authMiddleware.js";
+import { generateToken } from "./utils/generateToken.js";
+
+// Initialize Express app
 const app = express();
-app.use(express.json());
+
+// Load environment variables
+dotenv.config();
+
+// Connect to database
+connectDB();
+
+// Middleware
 app.use(cors());
+app.use(express.json());
 
-// Mount the task routes correctly
+// Routes
 app.use("/api/tasks", taskRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/auth", authRoutes);
 
-// Sample route
-app.get("/", (req, res) => {
-  res.send("API is running...");
-});
+// Error Handling Middleware
+app.use(notFound);
+app.use(errorHandler);
 
+// Start Server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
